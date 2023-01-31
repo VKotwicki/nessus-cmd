@@ -1,8 +1,25 @@
 import csv, re
+import argparse
+
+# Takes in file name from cmd and can specify output file name
+parser = argparse.ArgumentParser("Used for removing duplicate entries in Nessus csv files.")
+parser.add_argument("-i", type=str, help="Input file name")
+parser.add_argument("-o", type=str, help="Output file name") #TODO: make optional
+args = parser.parse_args()
+
 
 # specify the input and output file names
-input_file = "202212 - Workstation.csv"
-output_file = "202212 - Workstation - output.csv"
+input_file = "202212 - Workstation.csv" # Can manually add your own here
+if args.i:
+    input_file = args.i
+
+# format output file name
+output_file = input_file[:-4] + " - output.csv" # Can manually add your own here
+
+if args.o:
+    output_file = args.o
+    if args.o[-4:] != ".csv":
+        output_file = output_file + ".csv"
 
 # Vulnerability types to be removed
 values_to_remove = ["Risk", "None", "Info", "Low"]
