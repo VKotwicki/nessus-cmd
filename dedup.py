@@ -108,7 +108,6 @@ with open(output_file, "w", encoding="utf-8", newline="") as output_file:
                 # If current cell is similar to the last cell set checked, this will return the last cell checked with the higher version number as part of the string
                 # This returns a tuple with the updated cell value and a bool that states whether this cell is similar to the last set one
                 current_updated_cell = check_similar_rows(last_row_set, line[4])
-                last_row_set = current_updated_cell[0]
                 # If they are similar
                 # current_updated_cell[1] is a bool - whether the cells are similar or not
                 #print("LINE:", line)
@@ -120,12 +119,13 @@ with open(output_file, "w", encoding="utf-8", newline="") as output_file:
                     # TODO: check if any previous rows to update
                     #print(data)
                     if len(rows_to_update) > 1:
-                        index_to_update = rows_to_update.pop(0)
+                        index_to_update = rows_to_update.pop(0) # remove lowest one
+                        rows_to_update.sort(reverse=True) # if not from highest to lowest, index will be out of range for some cases
                         temp_list = list(data[index_to_update])
                         temp_list[4] = last_row_set
                         data[index_to_update] = tuple(temp_list)
-                        rows_to_update.sort(reverse=True) # if not from highest to lowest, index will be out of range for some cases
                         
+                        # since it's
                         for i in rows_to_update: # previous now duplicate entries
                             del data[i]
                             data_index = data_index - 1
@@ -134,7 +134,7 @@ with open(output_file, "w", encoding="utf-8", newline="") as output_file:
                     rows_to_update = []
 
                 rows_to_update.append(data_index) # rows to update if multiple cells are similar
-
+                last_row_set = current_updated_cell[0]
                 # e.g. Google Chrome 10.10.3.2 == Google Chrome 10.10.3.2
                 # e.g. Google Chrome 10.10.3.2 == Acrobat 2.10.9.1
                 #if current_updated_cell == last_row_set:
