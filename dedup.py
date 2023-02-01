@@ -1,6 +1,10 @@
 import csv, re
 from doctest import master
 
+# TODO:
+# Deal with dates
+# deal with multiple versions
+# deal with the "multiple" - remove it?
 
 # TODO: checks port and IP before
 # OUTPUT: "New Updated Row", whether it is similar or not
@@ -11,32 +15,35 @@ from doctest import master
 # INPUT: "Google Chrome 10.2.6.1", "Chromium 11.3.9.1 / 12.2.2.2"
 # OUTPUT:"Chromium 12.2.2.2"
 def check_similar_rows(master_name_cell, comparison_name_cell):
-    # If same up to date or version
-    # If everything BUT the numbers are the same (or dates), return updated master list
-    
     # TODO: account for sates in the (January 2023) format
     # If the next word after the version number is the same
-    
-    # TODO: use regex to remove versions/dates from a string and see if they're the same
 
-    # This removes the ugly tuple results caused by regex groups
-    # TODO: find a better way to do this - regex needs fixing
     reg = "((?=\d+\.)+[(\.\d+a-z)]+)"
     versions_master = re.findall(reg, master_name_cell)
     versions_comparison =  re.findall(reg, comparison_name_cell)
 
     versions = versions_master + versions_comparison
 
-    # only used to see if both strings are the same when the versions are removed
-    # make a different version of the string for the comparison bit
-    # then get the string that has the highest version, then just remove the lower verisons using the regex
-    formatted_master_str = master_name_cell
-    formatted_comparison_str = comparison_name_cell
-    for i in versions:
-        formatted_master_str =  formatted_master_str.replace(i, "***")
-        formatted_comparison_str = formatted_comparison_str.replace(i, "***")
+    if versions != [] and versions != None:
 
-    if versions:
+        formatted_master_str = master_name_cell.replace("/", " ")
+        formatted_comparison_str = comparison_name_cell.replace("/", " ")
+        
+        # This creates a placeholder for adding in the highest version string later
+        if versions_master:
+            formatted_master_str = formatted_master_str.replace(versions_master[0], "***")
+        if versions_comparison:
+            formatted_comparison_str = formatted_comparison_str.replace(versions_comparison[0], "***")
+
+        for i in versions:
+            formatted_master_str =  formatted_master_str.replace(i, "")
+            formatted_comparison_str = formatted_comparison_str.replace(i, "")
+
+        formatted_master_str = re.sub(" +", " ", formatted_master_str) # remove any excessive whitespaces left over
+        formatted_comparison_str = re.sub(" +", " ", formatted_comparison_str) # remove any excessive whitespaces left over
+
+        # First, get max verisons within each cell
+        
         if formatted_master_str == formatted_comparison_str:
             # same string with different versions
             # so, get most updated version and insert into the new one, and return that
@@ -44,15 +51,17 @@ def check_similar_rows(master_name_cell, comparison_name_cell):
 
             # Because we had to remove the dots to check for the highest version available, it's not formatted correctly
             # so, we find the correctly formated version (with the .) and use that one instead to add back in
-            formatted_master_str = formatted_master_str.replace("***", highest_version, 1)
-            re.sub("[\\/*]", "", formatted_master_str) # removes extra * and any leftover /
-            re.sub(" +", " ", formatted_master_str) # remove any excessive whitespaces left over
+            formatted_master_str = formatted_master_str.replace("***", highest_version)
 
             #print("old master:", master_name_cell)
             #print("old comp:", comparison_name_cell)
             #print(formatted_master_str)
 
             return (formatted_master_str, True)
+
+        if versions_comparison:
+            highest_version = max(versions_comparison)
+            comparison_name_cell = formatted_comparison_str.replace("***", highest_version)
 
     return (comparison_name_cell, False)
 
@@ -108,13 +117,10 @@ with open(output_file, "w", encoding="utf-8", newline="") as output_file:
                 # If current cell is similar to the last cell set checked, this will return the last cell checked with the higher version number as part of the string
                 # This returns a tuple with the updated cell value and a bool that states whether this cell is similar to the last set one
                 current_updated_cell = check_similar_rows(last_row_set, line[4])
-                # If they are similar
-                # current_updated_cell[1] is a bool - whether the cells are similar or not
-                #print("LINE:", line)
-                #print("")
-                #print("Similar?:", current_updated_cell[1]) 
-                # if they arent similar, run the below code and reset rows_to_update
-                # if they are similar, rows_to_update shouldnt reset
+                temp_list = list(line)
+                temp_list[4] = current_updated_cell[0]
+                line = tuple(temp_list)        
+                
                 if not current_updated_cell[1]:
                     # TODO: check if any previous rows to update
                     #print(data)
@@ -133,8 +139,8 @@ with open(output_file, "w", encoding="utf-8", newline="") as output_file:
                     # if they aren't similar at all
                     rows_to_update = []
 
-                rows_to_update.append(data_index) # rows to update if multiple cells are similar
                 last_row_set = current_updated_cell[0]
+                rows_to_update.append(data_index) # rows to update if multiple cells are similar
                 # e.g. Google Chrome 10.10.3.2 == Google Chrome 10.10.3.2
                 # e.g. Google Chrome 10.10.3.2 == Acrobat 2.10.9.1
                 #if current_updated_cell == last_row_set:
@@ -147,12 +153,6 @@ with open(output_file, "w", encoding="utf-8", newline="") as output_file:
                 seen_lines.add(line)
 
                 data_index = data_index + 1
-
-        if data_index == 5000:
-            for i in data:
-                #print(i)
-                pass
-            break
 
     for row in data:
         writer.writerow(row)
