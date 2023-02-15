@@ -1,6 +1,7 @@
 import csv, re
 import argparse
 from datetime import datetime
+import time
 
 # TODO:
 # Deal with dates
@@ -98,7 +99,7 @@ values_to_remove = ["Risk", "None", "Info", "Low"]
 split_pattern = r"[:<]"
 
 # read the input file
-with open(input_file, "r") as input_file:
+with open(input_file, "r", encoding="utf-8") as input_file:
     reader = csv.reader(input_file)
     lines = list(reader)
 
@@ -111,6 +112,7 @@ with open(output_file, "w", encoding="utf-8", newline="") as output_file:
         "Protocol",
         "Port",
         "Name",
+        "Solution",
         "CVSS v3.0 Base Score",
         "Risk Factor",
         "Application",
